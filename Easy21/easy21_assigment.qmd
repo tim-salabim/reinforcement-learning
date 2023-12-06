@@ -13,7 +13,9 @@ library(reticulate)
 
 In this document we develop a solution for the [Easy21](https://www.davidsilver.uk/wp-content/uploads/2020/03/Easy21-Johannes.pdf) assignment of the course.
 
-## Setup - draw card
+## Rules of the game
+
+### draw card
 
 The rules outlined in the assignment for the card draw are:
 
@@ -21,7 +23,7 @@ The rules outlined in the assignment for the card draw are:
 * Each draw from the deck results in a value between 1 and 10 (uniformly distributed) with a colour of red (probability 1/3) or black (probability 2/3).
 * There are no aces or picture (face) cards in this game
 
-### R
+#### R
 
 ```{r r-draw}
 values = 1:10
@@ -45,7 +47,7 @@ drawCard("red")
 replicate(10, drawCard())
 ```
 
-### Python
+#### Python
 
 ```{python py-draw}
 import random
@@ -74,9 +76,9 @@ for i in range(9):
 cards
 ```
 
-## Setup - hit or stick
+### playing
 
-The rules of the game are:
+The rules for playing of the game are:
 
 * At the start of the game both the player and the dealer draw one black card (fully observed)
 * Each turn the player may either stick or hit
@@ -84,7 +86,7 @@ The rules of the game are:
 * If the player sticks she receives no further cards
 * The values of the player’s cards are added (black cards) or subtracted (red cards)
 
-### R
+#### R
 
 ```{r r-hit}
 hit = function(cards) {
@@ -99,3 +101,95 @@ cards
 # hit
 hit(cards)
 ```
+
+#### Python
+
+```{python py-hit}
+def hit(cards):
+  new_card = drawCard()
+  return [cards, new_card]
+
+# start
+cards = drawCard("black")
+cards
+
+# hit
+hit(cards)
+```
+
+### win or lose and rewards
+
+The rules for win/lose and associated rewards are:
+
+* If the player’s sum exceeds 21, or becomes less than 1, then she “goes bust” and loses the game (reward -1)
+* If the player sticks then the dealer starts taking turns. The dealer always sticks on any sum of 17 or greater, and hits otherwise. If the dealer goes bust, then the player wins; otherwise, the outcome – win (reward +1), lose (reward -1), or draw (reward 0) – is the player with the largest sum.
+
+## 1 Implementation
+
+Part 1 of the Easy21 Assignment:
+
+> You should write an environment that implements the game Easy21. Specifically, write a function, named step, which takes as input a state s (dealer’s first card 1–10 and the player’s sum 1–21), and an action a (hit or stick), and returns a sample of the next state s' (which may be terminal if the game is finished) and reward r. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting (γ = 1). You should treat the dealer’s moves as part of the environment, i.e. calling step with a stick action will play out the dealer’s cards and return the final reward and terminal state.
+
+#### R
+
+```{r r-step}
+step = function(
+    s = c(drawCard("black"), drawCard("black"))
+    , a = c("hit", "stick")
+) {
+  a = match.arg(a)
+  r = 0
+  # player hits - add next card
+  if (a == "hit") {
+    s[2] = sum(hit(s[2]))
+    if (s[2] < 1 || s[2] > 21) {
+      r = -1
+    }
+    return(
+      list(
+        s = s
+        , r = r
+      )
+    )
+  }
+  
+  # player sticks - play out game
+  if (a == "stick") {
+    if (s[1] >= 17) {
+      if (s[1] < 1 || s[1] > 21) {
+        r = 1
+      } else if (s[2] > s[1]) {
+        r = 1
+      } else if (s[1] > s[2]) {
+        r = -1
+      }
+      return(
+        list(
+          s = s
+          , r = r
+        )
+      )
+    } else {
+      s[1] = sum(hit(s[1]))
+      s = step(s, "stick")
+      return(s)
+    }
+  }
+}
+
+s1 = step(a = "hit")
+s1
+s2 = step(s1$s, "hit")
+step(s2$s, "stick")
+```
+
+#### Python
+
+```{python py-step}
+def step(s, a):
+  r = 0
+  return {"s": s, "r": r}
+
+step([12, 12], "hit")
+```
+

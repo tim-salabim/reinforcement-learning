@@ -104,16 +104,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="reinforcement-learning-assignment-easy21" class="level1">
 <h1>Reinforcement Learning Assignment: Easy21</h1>
 <p>In this document we develop a solution for the <a href="https://www.davidsilver.uk/wp-content/uploads/2020/03/Easy21-Johannes.pdf">Easy21</a> assignment of the course.</p>
-<section id="setup---draw-card" class="level2">
-<h2 class="anchored" data-anchor-id="setup---draw-card">Setup - draw card</h2>
+<section id="rules-of-the-game" class="level2">
+<h2 class="anchored" data-anchor-id="rules-of-the-game">Rules of the game</h2>
+<section id="draw-card" class="level3">
+<h3 class="anchored" data-anchor-id="draw-card">draw card</h3>
 <p>The rules outlined in the assignment for the card draw are:</p>
 <ul>
 <li>The game is played with an infinite deck of cards (i.e.&nbsp;cards are sampled with replacement)</li>
 <li>Each draw from the deck results in a value between 1 and 10 (uniformly distributed) with a colour of red (probability 1/3) or black (probability 2/3).</li>
 <li>There are no aces or picture (face) cards in this game</li>
 </ul>
-<section id="r" class="level3">
-<h3 class="anchored" data-anchor-id="r">R</h3>
+<section id="r" class="level4">
+<h4 class="anchored" data-anchor-id="r">R</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>values <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>colors <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"red"</span>, <span class="st">"black"</span>, <span class="st">"black"</span>)</span>
@@ -133,20 +135,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">drawCard</span>(<span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 10</code></pre>
+<pre><code>[1] 3</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">drawCard</span>(<span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -10</code></pre>
+<pre><code>[1] -3</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">replicate</span>(<span class="dv">10</span>, <span class="fu">drawCard</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1]   9  10  -5  10   1   5   5 -10   8   6</code></pre>
+<pre><code> [1]   3   7   1  10  -7   6   6   6 -10   4</code></pre>
 </div>
 </div>
 </section>
-<section id="python" class="level3">
-<h3 class="anchored" data-anchor-id="python">Python</h3>
+<section id="python" class="level4">
+<h4 class="anchored" data-anchor-id="python">Python</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -166,11 +168,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>drawCard(<span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>9</code></pre>
+<pre><code>8</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drawCard(<span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>-4</code></pre>
+<pre><code>-9</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cards <span class="op">=</span> [drawCard(<span class="st">"black"</span>)]</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">9</span>):</span>
@@ -178,14 +180,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[6, -3, 10, -6, 7, 3, -7, -10, 9, 9]</code></pre>
+<pre><code>[8, 10, -6, 4, 8, 5, 7, -7, 9, -6]</code></pre>
 </div>
 </div>
 </section>
 </section>
-<section id="setup---hit-or-stick" class="level2">
-<h2 class="anchored" data-anchor-id="setup---hit-or-stick">Setup - hit or stick</h2>
-<p>The rules of the game are:</p>
+<section id="playing" class="level3">
+<h3 class="anchored" data-anchor-id="playing">playing</h3>
+<p>The rules for playing of the game are:</p>
 <ul>
 <li>At the start of the game both the player and the dealer draw one black card (fully observed)</li>
 <li>Each turn the player may either stick or hit</li>
@@ -193,8 +195,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>If the player sticks she receives no further cards</li>
 <li>The values of the player’s cards are added (black cards) or subtracted (red cards)</li>
 </ul>
-<section id="r-1" class="level3">
-<h3 class="anchored" data-anchor-id="r-1">R</h3>
+<section id="r-1" class="level4">
+<h4 class="anchored" data-anchor-id="r-1">R</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>hit <span class="ot">=</span> <span class="cf">function</span>(cards) {</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  new_card <span class="ot">=</span> <span class="fu">drawCard</span>()</span>
@@ -205,12 +207,128 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>cards <span class="ot">=</span> <span class="fu">drawCard</span>(<span class="st">"black"</span>)</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code>[1] 7</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hit</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hit</span>(cards)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2 9</code></pre>
+<pre><code>[1]  7 -3</code></pre>
+</div>
+</div>
+</section>
+<section id="python-1" class="level4">
+<h4 class="anchored" data-anchor-id="python-1">Python</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> hit(cards):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  new_card <span class="op">=</span> drawCard()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [cards, new_card]</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># start</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>cards <span class="op">=</span> drawCard(<span class="st">"black"</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hit</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>hit(cards)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1, -1]</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="win-or-lose-and-rewards" class="level3">
+<h3 class="anchored" data-anchor-id="win-or-lose-and-rewards">win or lose and rewards</h3>
+<p>The rules for win/lose and associated rewards are:</p>
+<ul>
+<li>If the player’s sum exceeds 21, or becomes less than 1, then she “goes bust” and loses the game (reward -1)</li>
+<li>If the player sticks then the dealer starts taking turns. The dealer always sticks on any sum of 17 or greater, and hits otherwise. If the dealer goes bust, then the player wins; otherwise, the outcome – win (reward +1), lose (reward -1), or draw (reward 0) – is the player with the largest sum.</li>
+</ul>
+</section>
+</section>
+<section id="implementation" class="level2">
+<h2 class="anchored" data-anchor-id="implementation">1 Implementation</h2>
+<p>Part 1 of the Easy21 Assignment:</p>
+<blockquote class="blockquote">
+<p>You should write an environment that implements the game Easy21. Specifically, write a function, named step, which takes as input a state s (dealer’s first card 1–10 and the player’s sum 1–21), and an action a (hit or stick), and returns a sample of the next state s’ (which may be terminal if the game is finished) and reward r. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting (γ = 1). You should treat the dealer’s moves as part of the environment, i.e.&nbsp;calling step with a stick action will play out the dealer’s cards and return the final reward and terminal state.</p>
+</blockquote>
+<section id="r-2" class="level4">
+<h4 class="anchored" data-anchor-id="r-2">R</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> <span class="cf">function</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">s =</span> <span class="fu">c</span>(<span class="fu">drawCard</span>(<span class="st">"black"</span>), <span class="fu">drawCard</span>(<span class="st">"black"</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    , <span class="at">a =</span> <span class="fu">c</span>(<span class="st">"hit"</span>, <span class="st">"stick"</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">=</span> <span class="fu">match.arg</span>(a)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># player hits - add next card</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (a <span class="sc">==</span> <span class="st">"hit"</span>) {</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    s[<span class="dv">2</span>] <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">hit</span>(s[<span class="dv">2</span>]))</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (s[<span class="dv">2</span>] <span class="sc">&lt;</span> <span class="dv">1</span> <span class="sc">||</span> s[<span class="dv">2</span>] <span class="sc">&gt;</span> <span class="dv">21</span>) {</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>      r <span class="ot">=</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">s =</span> s</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        , <span class="at">r =</span> r</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># player sticks - play out game</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (a <span class="sc">==</span> <span class="st">"stick"</span>) {</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (s[<span class="dv">1</span>] <span class="sc">&gt;=</span> <span class="dv">17</span>) {</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (s[<span class="dv">1</span>] <span class="sc">&lt;</span> <span class="dv">1</span> <span class="sc">||</span> s[<span class="dv">1</span>] <span class="sc">&gt;</span> <span class="dv">21</span>) {</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>        r <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> <span class="cf">if</span> (s[<span class="dv">2</span>] <span class="sc">&gt;</span> s[<span class="dv">1</span>]) {</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>        r <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> <span class="cf">if</span> (s[<span class="dv">1</span>] <span class="sc">&gt;</span> s[<span class="dv">2</span>]) {</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>        r <span class="ot">=</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>          <span class="at">s =</span> s</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>          , <span class="at">r =</span> r</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>      s[<span class="dv">1</span>] <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">hit</span>(s[<span class="dv">1</span>]))</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>      s <span class="ot">=</span> <span class="fu">step</span>(s, <span class="st">"stick"</span>)</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(s)</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">=</span> <span class="fu">step</span>(<span class="at">a =</span> <span class="st">"hit"</span>)</span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>s1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$s
+[1] 10 11
+
+$r
+[1] 0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">=</span> <span class="fu">step</span>(s1<span class="sc">$</span>s, <span class="st">"hit"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">step</span>(s2<span class="sc">$</span>s, <span class="st">"stick"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$s
+[1] 22  5
+
+$r
+[1] 1</code></pre>
+</div>
+</div>
+</section>
+<section id="python-2" class="level4">
+<h4 class="anchored" data-anchor-id="python-2">Python</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> step(s, a):</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  r <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {<span class="st">"s"</span>: s, <span class="st">"r"</span>: r}</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>step([<span class="dv">12</span>, <span class="dv">12</span>], <span class="st">"hit"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'s': [12, 12], 'r': 0}</code></pre>
 </div>
 </div>
 </section>
