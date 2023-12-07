@@ -15,9 +15,7 @@ In this document we develop a solution for the [Easy21](https://www.davidsilver.
 
 ::: {.panel-tabset}
 
-# Setup
-
-## Rules of the game
+# Rules of the game
 
 ### draw card
 
@@ -136,7 +134,7 @@ The rules for win/lose and associated rewards are:
 * If the player’s sum exceeds 21, or becomes less than 1, then she “goes bust” and loses the game (reward -1)
 * If the player sticks then the dealer starts taking turns. The dealer always sticks on any sum of 17 or greater, and hits otherwise. If the dealer goes bust, then the player wins; otherwise, the outcome – win (reward +1), lose (reward -1), or draw (reward 0) – is the player with the largest sum.
 
-## Exercise 1: Implementation
+# Exercise 1: Implementation
 
 Part 1 of the Easy21 Assignment:
 

@@ -134,11 +134,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Reinforcement Learning Assignment: Easy21</h1>
 <p>In this document we develop a solution for the <a href="https://www.davidsilver.uk/wp-content/uploads/2020/03/Easy21-Johannes.pdf">Easy21</a> assignment of the course.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Setup</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Rules of the game</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Exercise 1: Implementation</a></li></ul>
 <div class="tab-content">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
-<section id="rules-of-the-game" class="level2">
-<h2 class="anchored" data-anchor-id="rules-of-the-game">Rules of the game</h2>
 <section id="draw-card" class="level3">
 <h3 class="anchored" data-anchor-id="draw-card">draw card</h3>
 <p>The rules outlined in the assignment for the card draw are:</p>
@@ -174,11 +172,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">drawCard</span>(<span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -1</code></pre>
+<pre><code>[1] -3</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">replicate</span>(<span class="dv">10</span>, <span class="fu">drawCard</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1]   5  -9 -10   6   4  -2   8  10  -9   9</code></pre>
+<pre><code> [1]   5 -10   2   2   1   7   3   7   8  -3</code></pre>
 </div>
 </div>
 </div>
@@ -202,11 +200,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>drawCard(<span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>8</code></pre>
+<pre><code>2</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drawCard(<span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>-2</code></pre>
+<pre><code>-5</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cards <span class="op">=</span> [drawCard(<span class="st">"black"</span>)]</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">9</span>):</span>
@@ -214,7 +212,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[8, 9, 2, 7, 9, 4, 3, 10, 1, -4]</code></pre>
+<pre><code>[10, 6, 10, 4, 9, 2, 1, -1, 3, -4]</code></pre>
 </div>
 </div>
 </div>
@@ -245,12 +243,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>cards <span class="ot">=</span> <span class="fu">drawCard</span>(<span class="st">"black"</span>)</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
+<pre><code>[1] 5</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hit</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hit</span>(cards)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4 2</code></pre>
+<pre><code>[1] 5 3</code></pre>
 </div>
 </div>
 </div>
@@ -264,12 +262,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>cards <span class="op">=</span> drawCard(<span class="st">"black"</span>)</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>cards</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>7</code></pre>
+<pre><code>10</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hit</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>hit(cards)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[7, 1]</code></pre>
+<pre><code>[10, 5]</code></pre>
 </div>
 </div>
 </div>
@@ -284,9 +282,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>If the player sticks then the dealer starts taking turns. The dealer always sticks on any sum of 17 or greater, and hits otherwise. If the dealer goes bust, then the player wins; otherwise, the outcome – win (reward +1), lose (reward -1), or draw (reward 0) – is the player with the largest sum.</li>
 </ul>
 </section>
-</section>
-<section id="exercise-1-implementation" class="level2">
-<h2 class="anchored" data-anchor-id="exercise-1-implementation">Exercise 1: Implementation</h2>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <p>Part 1 of the Easy21 Assignment:</p>
 <blockquote class="blockquote">
 <p>You should write an environment that implements the game Easy21. Specifically, write a function, named step, which takes as input a state s (dealer’s first card 1–10 and the player’s sum 1–21), and an action a (hit or stick), and returns a sample of the next state s’ (which may be terminal if the game is finished) and reward r. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting (γ = 1). You should treat the dealer’s moves as part of the environment, i.e.&nbsp;calling step with a stick action will play out the dealer’s cards and return the final reward and terminal state.</p>
@@ -345,7 +342,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>s1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$s
-[1]  5 11
+[1]  2 11
 
 $r
 [1] 0</code></pre>
@@ -355,10 +352,10 @@ $r
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">step</span>(s2<span class="sc">$</span>s, <span class="st">"stick"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$s
-[1] 19  2
+[1] 24 20
 
 $r
-[1] -1</code></pre>
+[1] 1</code></pre>
 </div>
 </div>
 </div>
@@ -395,19 +392,18 @@ $r
 <span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>s1 <span class="op">=</span> step(s <span class="op">=</span> [drawCard(<span class="st">"black"</span>), drawCard(<span class="st">"black"</span>)], a <span class="op">=</span> <span class="st">"hit"</span>)</span>
 <span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>s1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>{'s': [3, 17], 'r': 0}</code></pre>
+<pre><code>{'s': [10, 4], 'r': 0}</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hit one more time then stick and let dealer play out</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>s2 <span class="op">=</span> step(s1[<span class="st">"s"</span>], <span class="st">"hit"</span>)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>step(s2[<span class="st">"s"</span>], <span class="st">"stick"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>{'s': [19, 20], 'r': 1}</code></pre>
+<pre><code>{'s': [19, 2], 'r': -1}</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-</section>
 </div>
 </div>
 </div>
