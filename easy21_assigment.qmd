@@ -13,9 +13,11 @@ library(reticulate)
 
 In this document we develop a solution for the [Easy21](https://www.davidsilver.uk/wp-content/uploads/2020/03/Easy21-Johannes.pdf) assignment of the course.
 
+Easy21 is basically a modified version of Black Jack.
+
 ::: {.panel-tabset}
 
-# Rules of the game
+# Rules
 
 ### draw card
 
@@ -134,11 +136,11 @@ The rules for win/lose and associated rewards are:
 * If the player’s sum exceeds 21, or becomes less than 1, then she “goes bust” and loses the game (reward -1)
 * If the player sticks then the dealer starts taking turns. The dealer always sticks on any sum of 17 or greater, and hits otherwise. If the dealer goes bust, then the player wins; otherwise, the outcome – win (reward +1), lose (reward -1), or draw (reward 0) – is the player with the largest sum.
 
-# Exercise 1: Implementation
+# Ex-1: Implementation
 
 Part 1 of the Easy21 Assignment:
 
-> You should write an environment that implements the game Easy21. Specifically, write a function, named step, which takes as input a state s (dealer’s first card 1–10 and the player’s sum 1–21), and an action a (hit or stick), and returns a sample of the next state s' (which may be terminal if the game is finished) and reward r. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting (γ = 1). You should treat the dealer’s moves as part of the environment, i.e. calling step with a stick action will play out the dealer’s cards and return the final reward and terminal state.
+> You should write an environment that implements the game Easy21. Specifically, write a function, named $step$, which takes as input a state $s$ (dealer’s first card 1–10 and the player’s sum 1–21), and an action $a$ (hit or stick), and returns a sample of the next state $s'$ (which may be terminal if the game is finished) and reward $r$. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting ($\gamma = 1$). You should treat the dealer’s moves as part of the environment, i.e. calling $step$ with a stick action will play out the dealer’s cards and return the final reward and terminal state.
 
 ::: {.panel-tabset}
 
@@ -238,5 +240,36 @@ step(s2["s"], "stick")
 ```
 
 :::
+
+# Ex-2: Monte-Carlo Control
+
+> Apply Monte-Carlo control to Easy21. Initialise the value function to zero. Use a time-varying scalar step-size of $\alpha_{t} = 1/N(s_{t}, a_{t})$ and an $\epsilon$-greedy exploration strategy with $\epsilon_{t} = N_{0}/(N_{0} + N(s_{t}))$, where $N_{0} = 100$ is a constant, $N(s)$ is the number of times that state s has been visited, and $N(s, a)$ is the number of times that action $a$ has been selected from state $s$. Feel free to choose an alternative value for $N_{0}$, if it helps producing better results. Plot the optimal value function $V^{∗} (s) = max_{a} Q^{∗} (s, a)$ using similar axes to the following figure taken from Sutton and Barto’s Blackjack example.
+
+![](sutton_barto_blackjack.png)
+
+
+
+```{r r-mc}
+#| eval: false
+#| echo: false
+library(data.table)
+
+players_cards = drawCard("black")
+dealers_card = drawCard("black")
+
+df = data.table(
+  state = list("s" = c(dealers_card, players_cards))
+  , action = "hit"
+  , reward = 0
+)
+
+s1 = step(df$state[[1]], "hit")
+
+df[
+  identical(df$state[[1]], df$state[[1]])
+  , c("action", "reward") := list("hit", reward + s1$r)
+]
+
+```
 
 :::
