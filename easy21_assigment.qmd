@@ -153,16 +153,19 @@ step = function(
 ) {
   a = match.arg(a)
   r = 0
+  t = FALSE
   # player hits - add next card
   if (a == "hit") {
     s[2] = sum(hit(s[2]))
     if (s[2] < 1 || s[2] > 21) {
       r = -1
+      t = TRUE
     }
     return(
       list(
         s = s
         , r = r
+        , terminated = t
       )
     )
   }
@@ -181,6 +184,7 @@ step = function(
         list(
           s = s
           , r = r
+          , terminated = TRUE
         )
       )
     } else {
@@ -247,29 +251,102 @@ step(s2["s"], "stick")
 
 ![](sutton_barto_blackjack.png)
 
+## Control functions
 
+::: {.panel-tabset}
 
-```{r r-mc}
+#### R
+
+```{r r-mc-funcs}
+#| eval: true
+#| echo: true
+
+alpha = function(Na) {
+  1 / Na
+}
+
+epsilon = function(Ns, N0 = 100) {
+  N0 / (N0 + Ns)
+}
+
+greedyAction = function(actions, values) {
+  if (length(actions) == 1) {
+    return(actions)
+  }
+  if (Reduce(identical, values)) {
+    return(NULL)
+  }
+  actions[which.max(values)]
+}
+  
+chooseAction = function(epsilon, greedy_action = NULL) {
+  action = sample(c("hit", "stick"), 1)
+  if (!is.null(greedy_action)) {
+    action = sample(
+      c(greedy_action, action)
+      , 1
+      , prob = c(max(0, 1 - epsilon), epsilon)
+    )
+  }
+  return(action)
+}
+
+mcUpdate = function(value, reward, Ns, alpha) {
+  value + alpha * (reward - value) / Ns
+}
+```
+
+#### Python
+
+```{python py-mc-funcs}
+
+```
+
+:::
+
+```{r r-control}
 #| eval: false
 #| echo: false
+
 library(data.table)
+
+### FIXME here - but how?
+playEpisode = function(SD) {
+  SDout = copy(SD)
+  s1 = step(SDout[, state[[1]]], SDout[, action])
+  SDout[, Na := Na + 1][, value := mcUpdate(value, s1$r, Ns, Na)]
+  df = data.table(
+    state = list(s1$s)
+    , action = chooseAction(epsilon(0))
+    , Na = 0
+    , Ns = 1
+    , value = 0
+    , terminal = s1$terminated
+  )
+  SDout = rbind(SDout, df)
+  
+  if (s1$terminated) {
+    return(SDout)
+  } else {
+    return(playEpisode(SDout[nrow(SDout), ]))
+  }
+}
+
 
 players_cards = drawCard("black")
 dealers_card = drawCard("black")
 
 df = data.table(
   state = list("s" = c(dealers_card, players_cards))
-  , action = "hit"
-  , reward = 0
+  , action = chooseAction(epsilon(0))
+  , Na = 0
+  , Ns = 1
+  , value = 0
+  , terminal = FALSE
 )
 
-s1 = step(df$state[[1]], "hit")
-
-df[
-  identical(df$state[[1]], df$state[[1]])
-  , c("action", "reward") := list("hit", reward + s1$r)
-]
-
+df
+playEpisode(df)
 ```
 
 :::
