@@ -2,6 +2,8 @@
 title: "Easy21"
 author: "Tim Appelhans"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -305,31 +307,73 @@ mcUpdate = function(value, reward, Ns, alpha) {
 :::
 
 ```{r r-control}
-#| eval: false
-#| echo: false
+#| eval: true
+#| echo: true
 
 library(data.table)
 
-### FIXME here - but how?
-playEpisode = function(SD) {
-  SDout = copy(SD)
-  s1 = step(SDout[, state[[1]]], SDout[, action])
-  SDout[, Na := Na + 1][, value := mcUpdate(value, s1$r, Ns, Na)]
+playOneIteration = function(DT, state_to_play) {
+  DTin = copy(DT)
+  
+  SDout = DTin[
+    state_dealer == state_to_play[1] & 
+      state_player == state_to_play[2], 
+  ]
+  
+  if (nrow(SDout) == 0) {
+    stop(
+      sprintf(
+        "something went wrong, state %s not found"
+        , state_to_play
+      )
+    )
+  }
+  
+  if (nrow(SDout) > 1) {
+    stop("not implemented yet")
+  }
+  
+  # play next step and update original Na and value
+  s1 = step(SDout[, c(state_dealer, state_player)], SDout[, action])
+  
+  ## FIXME - the value update needs to happen at the end or better outside this function! Only accumulate here, calculate later?
+  SDout[, Na := Na + 1] #[, value := mcUpdate(value, s1$r, Ns, Na)]
+  
+  # does new state s1 already exist in DTin?
+  nrw = nrow(
+    DTin[
+      state_dealer == s1$s[1] & 
+        state_player == s1$s[2], 
+    ]
+  )
+  
+  # if it does:
+  if (nrw != 0) {
+    stop(
+      sprintf(
+        "state %s already exists, not implemented yet"
+        , s1$s
+      )
+    )
+  }
+  
+  # if it doesn't:
+  ## FIXME here
+  
   df = data.table(
-    state = list(s1$s)
+    state_dealer = s1$s[1]
+    , state_player = s1$s[2]
     , action = chooseAction(epsilon(0))
     , Na = 0
     , Ns = 1
-    , value = 0
+    , value = s1$r
     , terminal = s1$terminated
   )
-  SDout = rbind(SDout, df)
   
-  if (s1$terminated) {
-    return(SDout)
-  } else {
-    return(playEpisode(SDout[nrow(SDout), ]))
-  }
+  SDreturn = rbind(SDout, df)
+  
+  return(SDreturn)
+  
 }
 
 
@@ -337,7 +381,8 @@ players_cards = drawCard("black")
 dealers_card = drawCard("black")
 
 df = data.table(
-  state = list("s" = c(dealers_card, players_cards))
+  state_dealer = dealers_card
+  , state_player = players_cards
   , action = chooseAction(epsilon(0))
   , Na = 0
   , Ns = 1
@@ -346,7 +391,40 @@ df = data.table(
 )
 
 df
-playEpisode(df)
+
+new_df = playOneIteration(
+  df
+  , state_to_play = c(df$state_dealer, df$state_player)
+)
+
+new_df
+
+while (!any(new_df[, terminal])) {
+  new_df = rbind(
+    new_df[-nrow(new_df), ]
+    , playOneIteration(
+      new_df
+      , new_df[nrow(new_df), c(state_dealer, state_player)]
+    )
+  )
+}
+
+new_df
+
+n = nrow(new_df)
+values = new_df[, value]
+
+for (i in seq_len(n)) {
+  j = i - 1
+  if (i == 1) {
+    new_df[i, value := mean(tail(values, n))]
+  } else {
+    new_df[i, value := mean(tail(values, -j))]
+  }
+}
+
+print(new_df)
+
 ```
 
 :::
