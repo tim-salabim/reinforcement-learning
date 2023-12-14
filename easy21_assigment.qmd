@@ -34,13 +34,13 @@ The rules outlined in the assignment for the card draw are:
 #### R
 
 ```{r r-draw}
-values = 1:10
-colors = c("red", "black", "black")
+card_values = 1:10
+card_colors = c("red", "black", "black")
 
 drawCard = function(color) {
-  val = sample(values, 1)
+  val = sample(card_values, 1)
   if (missing(color)) {
-    color = sample(colors, 1)
+    color = sample(card_colors, 1)
   }
   
   if (color == "red") {
@@ -296,6 +296,10 @@ chooseAction = function(epsilon, greedy_action = NULL) {
 mcUpdate = function(value, reward, Ns, alpha) {
   value + alpha * (reward - value) / Ns
 }
+
+# isPlayable = function(s) {
+#   s[1] <= 10 & !(any(s < 1) || any(s > 21))
+# }
 ```
 
 #### Python
@@ -307,124 +311,685 @@ mcUpdate = function(value, reward, Ns, alpha) {
 :::
 
 ```{r r-control}
-#| eval: true
-#| echo: true
+#| eval: false
+#| echo: false
 
 library(data.table)
 
-playOneIteration = function(DT, state_to_play) {
-  DTin = copy(DT)
-  
-  SDout = DTin[
-    state_dealer == state_to_play[1] & 
-      state_player == state_to_play[2], 
-  ]
-  
-  if (nrow(SDout) == 0) {
-    stop(
-      sprintf(
-        "something went wrong, state %s not found"
-        , state_to_play
-      )
-    )
-  }
-  
-  if (nrow(SDout) > 1) {
-    stop("not implemented yet")
-  }
-  
-  # play next step and update original Na and value
-  s1 = step(SDout[, c(state_dealer, state_player)], SDout[, action])
-  
-  ## FIXME - the value update needs to happen at the end or better outside this function! Only accumulate here, calculate later?
-  SDout[, Na := Na + 1] #[, value := mcUpdate(value, s1$r, Ns, Na)]
-  
-  # does new state s1 already exist in DTin?
-  nrw = nrow(
-    DTin[
-      state_dealer == s1$s[1] & 
-        state_player == s1$s[2], 
-    ]
-  )
-  
-  # if it does:
-  if (nrw != 0) {
-    stop(
-      sprintf(
-        "state %s already exists, not implemented yet"
-        , s1$s
-      )
-    )
-  }
-  
-  # if it doesn't:
-  ## FIXME here
-  
-  df = data.table(
-    state_dealer = s1$s[1]
-    , state_player = s1$s[2]
-    , action = chooseAction(epsilon(0))
+initiateTable = function(
+    state
+    , action
     , Na = 0
     , Ns = 1
-    , value = s1$r
-    , terminal = s1$terminated
+    , reward = 0
+    , value = 0
+    , terminal = FALSE
+) {
+  data.table(
+    state_dealer = state[1]
+    , state_player = state[2]
+    , action = action
+    , Na = Na
+    , Ns = Ns
+    , reward = reward
+    , value = value
+    , terminal = terminal
   )
-  
-  SDreturn = rbind(SDout, df)
-  
-  return(SDreturn)
-  
 }
 
+mergeTables = function(DT1, DT2) {
+  DTout = merge(
+    DT1
+    , DT2
+    , by = c("state_dealer", "state_player", "action")
+    , all = TRUE
+  )
+  
+  cols = grep(".x$|.y$", names(DTout), value = TRUE)
+  
+  DTout[
+    , c("Na", "Ns", "reward", "value", "terminal") := list(
+      sum(c(Na.x, Na.y), na.rm = TRUE)
+      , sum(c(Ns.x, Ns.y), na.rm = TRUE)
+      , sum(c(reward.x, reward.y), na.rm = TRUE)
+      , value = mean(c(value.x, value.y), na.rm = TRUE)
+      , as.logical(max(c(terminal.x, terminal.y), na.rm = TRUE))
+    )
+    , by = 1:nrow(DTout)
+  ][
+    , (cols) := NULL
+  ]
+}
 
-players_cards = drawCard("black")
-dealers_card = drawCard("black")
+updatePlayedStateAction = function(DT, state, act, r) {
+  DTout = copy(DT)
+  DTout = DTout[
+    state_dealer == state[1] &
+      state_player == state[2] &
+      action == act
+    , c("Na", "reward") := list(Na + 1, reward + r)
+  ][
+    , value := mcUpdate(value, reward, Ns, alpha(Na))
+  ]
+  return(DTout)
+}
 
-df = data.table(
-  state_dealer = dealers_card
-  , state_player = players_cards
-  , action = chooseAction(epsilon(0))
-  , Na = 0
-  , Ns = 1
-  , value = 0
-  , terminal = FALSE
-)
+stateAction = function(DT, crd_dlr, sum_plr) {
+  DTsbs = copy(DT)
+  SDstate = subset(
+    DTsbs
+    , state_dealer == crd_dlr &
+      state_player == sum_plr
+  )
+  
+  # if there are more than 2 rows of state, raise error
+  if (nrow(SDstate) > 2) {
+    stop(
+      sprintf(
+        "I see state %s more than twice, something is not quite correct"
+        , paste(dealers_card, players_sum, sep = ", ")
+      )
+    )
+  }
+  
+  # initiate new random action
+  act = chooseAction(epsilon(0))
+  
+  # if state has been played before, choose epsilon greedy action
+  if (nrow(SDstate) > 0) {
+    act = chooseAction(
+      epsilon(sum(SDstate[, Ns]))
+      , greedyAction(SDstate[, action], SDstate[, value])
+    )
+  }
+  
+  return(act)
+}
 
-df
-
-new_df = playOneIteration(
-  df
-  , state_to_play = c(df$state_dealer, df$state_player)
-)
-
-new_df
-
-while (!any(new_df[, terminal])) {
-  new_df = rbind(
-    new_df[-nrow(new_df), ]
-    , playOneIteration(
-      new_df
-      , new_df[nrow(new_df), c(state_dealer, state_player)]
+stateActionMetrics = function(DT, crd_dlr, sum_plr) {
+  DTsbs = copy(DT)
+  SDstate = subset(
+    DTsbs
+    , state_dealer == crd_dlr &
+      state_player == sum_plr
+  )
+  
+  # if there are more than 2 rows of state, raise error
+  if (nrow(SDstate) > 2) {
+    stop(
+      sprintf(
+        "I see state %s more than twice, something is not quite correct"
+        , paste(dealers_card, players_sum, sep = ", ")
+      )
+    )
+  }
+  
+  # initiate new random action
+  act = chooseAction(epsilon(0))
+  
+  # if state has been played before, choose epsilon greedy action
+  if (nrow(SDstate) > 0) {
+    act = chooseAction(
+      epsilon(sum(SDstate[, Ns]))
+      , greedyAction(SDstate[, action], SDstate[, value])
+    )
+  }
+  
+  SDstateaction = subset(
+    SDstate
+    , action == act
+  )
+  
+  if (nrow(SDstateaction) == 0) {
+    Ns = 1
+    Na = 0
+    reward = 0
+    value = 0
+    terminal = FALSE
+  } else {
+    Ns = SDstateaction[, Ns]
+    Na = SDstateaction[, Na]
+    reward = SDstateaction[, reward]
+    value = SDstateaction[, value]
+    terminal = SDstateaction[, terminal]
+  }
+  
+  return(
+    list(
+      action = act
+      , Ns = Ns
+      , Na = Na
+      , reward = reward
+      , value = value
+      , terminal = terminal
     )
   )
 }
 
-new_df
+# play game ----
 
-n = nrow(new_df)
-values = new_df[, value]
+# FIXME: there's some problem with counting Ns & Na somewhere...
 
-for (i in seq_len(n)) {
-  j = i - 1
-  if (i == 1) {
-    new_df[i, value := mean(tail(values, n))]
+# initial card draw
+for (i in 1:1000) {
+# while (min(dat$Ns) < 100) {
+  print(i)
+  # print(min(dat$Ns))
+  dealers_card = drawCard("black")
+  players_sum = drawCard("black")
+  
+  # choose (random) action
+  if (exists("dat")) {
+    mtrcs = stateActionMetrics(dat, dealers_card, players_sum)
+    act = mtrcs$action
   } else {
-    new_df[i, value := mean(tail(values, -j))]
+    act = chooseAction(epsilon(0))
   }
+  act
+  
+  # FIXME here: need to check if state-action already exists!
+  # initial table (only at first play of game)
+  df_episode = initiateTable(
+    state = c(dealers_card, players_sum)
+    , action = mtrcs$act
+    , Na = mtrcs$Na
+    , Ns = mtrcs$Ns
+    , reward = mtrcs$reward
+    , value = mtrcs$value
+    , terminal = mtrcs$terminal
+  )
+  df_episode
+  
+  # play state-action
+  s1 = step(c(dealers_card, players_sum), act)
+  s1
+  
+  # update played state-action according to gained reward
+  df_episode = updatePlayedStateAction(
+    df_episode
+    , state = c(dealers_card, players_sum)
+    , act = act
+    , r = s1$r
+  )
+  df_episode
+  df_episode
+  
+  # if episode not terminated, update (dealers and) players card sum
+  while (!s1$terminated) {
+    dealers_card = s1$s[1]
+    players_sum = s1$s[2]
+    
+    # determine action to take
+    # check if state has been visited before
+    SDstate = subset(
+      df_episode
+      , state_dealer == dealers_card &
+        state_player == players_sum
+    )
+    
+    # if there are more than 2 rows of state, raise error 
+    if (nrow(SDstate) > 2) {
+      stop(
+        sprintf(
+          "I see state %s more than twice, something is not quite correct"
+          , paste(dealers_card, players_sum, sep = ", ")
+        )
+      )
+    }
+    
+    # initiate new random action
+    act = chooseAction(epsilon(0))
+    
+    # if state has been played before, choose epsilon greedy action
+    if (nrow(SDstate) > 0) {
+      act = chooseAction(
+        epsilon(sum(SDstate[, Ns]))
+        , greedyAction(SDstate[, action], SDstate[, value])
+      )
+    }
+    
+    # check if state-action has been visited before
+    SDstateaction = subset(
+      SDstate
+      , action == act
+    )
+    
+    # if state-action not seen before, add to table
+    if (nrow(SDstateaction) == 0) {
+      df_episode = rbind(
+        df_episode
+        , initiateTable(c(dealers_card, players_sum), act)
+      )
+    } else {
+      df_episode[
+        state_dealer == dealers_card &
+          state_player == players_sum &
+          action == action
+        , Ns := Ns + 1
+      ]
+      # stop(
+      #   sprintf(
+      #     "state-action %s already exists. Not implemented yet"
+      #     , paste(c(dealers_card, players_sum, act), collapse = ", ")
+      #   )
+      # )
+    }
+    
+    s1 = step(c(dealers_card, players_sum), act)
+    df_episode = updatePlayedStateAction(
+      df_episode
+      , state = c(dealers_card, players_sum)
+      , act = act
+      , r = s1$r
+    )
+  }
+  
+  if (s1$terminated) {
+    n = nrow(df_episode)
+    values = df_episode[, value]
+    
+    for (i in seq_len(n)) {
+      j = i - 1
+      if (i == 1) {
+        df_episode[i, value := mean(tail(values, n))]
+      } else {
+        df_episode[i, value := mean(tail(values, -j))]
+      }
+    }
+  }
+  
+  # print(df_episode)
+  # print(df_episode)
+  
+  if (!exists("dat")) {
+    dat = df_episode
+  } else {
+    dat = mergeTables(dat, df_episode)
+  }
+  dat
+  dat
 }
 
-print(new_df)
+summary(dat)
 
+DTfinal = dat[
+  , .(
+    value = max(value)
+    , action = action[which.max(value)]
+    , Ns = sum(Ns)
+    , n = .N
+  )
+  , by = c("state_dealer", "state_player")
+]
+
+lattice::levelplot(
+  value ~ state_player * state_dealer
+  , data = DTfinal
+  , col.regions = hcl.colors(1000, "Purple-Green")
+  , at = seq(-1, 1, length.out = 40)
+)
+
+lattice::levelplot(
+  as.factor(action) ~ state_dealer * state_player
+  , data = DTfinal
+)
+
+
+lattice::wireframe(value ~ state_dealer * state_player, data = DTfinal)
+
+
+
+
+# iter = function(state, action) {
+#   DT = copy(D)
+#   s1 = step(DT[, c(state_dealer, state_player)], DT[, action])
+#   s1
+#   
+#   DT[
+#     # state_dealer == dealers_card &
+#     #   state_player == players_cards
+#     , c("Na", "reward") := list(Na + 1, reward + s1$r)
+#   ]
+#   
+#   
+#   act = chooseAction(epsilon(0))
+#   Na = 0
+#   Ns = 0
+#   val = 0
+#   
+#   SD = DT[
+#     state_dealer == s1$s[1] &
+#       state_player == s1$s[2]
+#   ]
+#   
+#   if (nrow(SD) > 0) {
+#     act = chooseAction(
+#       epsilon(sum(SD[, Ns]))
+#       , greedyAction(SD[, action], SD[, value])
+#     )
+#     if (nrow(SD) == 2) {
+#       Na = SD[action == act, Na]
+#       Ns = SD[action == act, Ns]
+#       val = SD[action == act, value]
+#     }
+#   }
+#   
+#   s1df = data.table(
+#     state_dealer = s1$s[1]
+#     , state_player = s1$s[2]
+#     , action = act
+#     , Na = Na
+#     , Ns = Ns + 1
+#     , reward = s1$r
+#     , value = val
+#     , terminal = s1$terminated
+#   )
+#   
+#   DTout = list(
+#     played_state = DT
+#     , new_state = s1df
+#   )
+#   
+#   return(DTout)
+# }
+
+# jnk = iter(df)
+# jnk
+# 
+# df = updatePlayedState(df, jnk[[1]])
+# df
+# 
+# while (!any(sapply(jnk, "[[", "terminal"))) {
+#   ln = length(jnk)
+#   jnk = append(
+#     head(jnk, ln-1)
+#     , iter(
+#       jnk[[ln]]
+#     )
+#   )
+#   #browser()
+# }
+# 
+# jnk = rbindlist(jnk)[terminal == FALSE]
+# jnk = jnk[
+#   , value := mcUpdate(
+#     value
+#     , reward
+#     , Ns
+#     , alpha(Na)
+#   )
+#   , by = 1:nrow(jnk)
+# ]
+# 
+# jnk
+# 
+# n = nrow(jnk)
+# values = jnk[, value]
+# 
+# for (i in seq_len(n)) {
+#   j = i - 1
+#   if (i == 1) {
+#     jnk[i, value := mean(tail(values, n))]
+#   } else {
+#     jnk[i, value := mean(tail(values, -j))]
+#   }
+# }
+# 
+# jnk
+# jnk
+
+## FIXME here: running an episode
+### 1. draw cards
+### 2. check if state already exists
+###   a. if no, run iteration & update reward
+###   b. if yes, update Ns, Na, and choose (greedy) action & run iteration
+###   c. update reward and value of state-action
+### 3. repeat 2. until terminal state
+### 4. update value with mcUpdate row-wise
+### 5. update value as mean return
+
+
+
+# playOneIteration = function(DT, state_to_play) {
+#   DTin = copy(DT)
+#   
+#   if (anyDuplicated(DTin)) {
+#     browser()
+#   }
+#   
+#   # extract relevant states from DT
+#   SDout = DTin[
+#     state_dealer == state_to_play[1] & 
+#       state_player == state_to_play[2]
+#   ]
+#   
+#   if (nrow(SDout) > 1) {
+#     browser()
+#     stop("more than 1 row, not implemented yet")
+#   }
+#   
+#   if (nrow(SDout) == 0) {
+#     SDout = initiateTable(state_to_play)
+#     # stop(
+#     #   sprintf(
+#     #     "something went wrong, state %s not found"
+#     #     , paste(state_to_play, collapse = ", ")
+#     #   )
+#     # )
+#   }
+#   
+#   act = SDout[, action]
+#   
+#   # play next step and update original Na and reward
+#   s1 = step(SDout[, c(state_dealer, state_player)], act)
+#   SDout[, c("Na", "reward") := list(Na + 1, s1$r)] 
+#   
+#   # does new state s1 already exist in DTin?
+#   nrw = nrow(
+#     DTin[
+#       state_dealer == s1$s[1] & 
+#         state_player == s1$s[2], 
+#     ]
+#   )
+#   
+#   # if it does:
+#   if (nrw != 0) {
+#     if (nrw == 1) {
+#       SD = DTin[
+#         state_dealer == s1$s[1] & 
+#           state_player == s1$s[2]
+#       ]
+#       Ns = sum(SD[, Ns])
+#       act = chooseAction(epsilon(Ns), greedyAction(SD[, action], SD[, value]))
+#       SD[action == act, Ns := Ns + 1]
+#       
+#       tst = merge(
+#         DTin
+#         , SD
+#         , by = c("state_dealer", "state_player", "action")
+#         , all = TRUE
+#       )
+#       
+#       cols = grep(".x$|.y$", names(tst), value = TRUE)
+#       
+#       tst[
+#         , c("Na", "Ns", "reward", "value", "terminal") := list(
+#           sum(c(Na.x, Na.y), na.rm = TRUE)
+#           , sum(c(Ns.x, Ns.y), na.rm = TRUE)
+#           , sum(c(reward.x, reward.y), na.rm = TRUE)
+#           , value = mean(c(value.x, value.y), na.rm = TRUE)
+#           , FALSE
+#         )
+#         , by = 1:nrow(tst)
+#       ][
+#         , (cols) := NULL
+#       ]
+# 
+#       return(tst)
+#     }
+#     
+#     if (nrw == 2) {
+#       stop(
+#         sprintf(
+#           "state %s already exists, not implemented yet"
+#           , paste(s1$s, collapse = ", ")
+#         )
+#       )
+#     }
+#   } else {
+#     
+#     # if it doesn't:
+#     df = data.table(
+#       state_dealer = s1$s[1]
+#       , state_player = s1$s[2]
+#       , action = chooseAction(epsilon(0))
+#       , Na = 0
+#       , Ns = 1
+#       , reward = 0
+#       , value = s1$r
+#       , terminal = s1$terminated
+#     )
+#     
+#     SDreturn = rbind(SDout, df)
+#     return(SDreturn)
+#   }
+#   
+# }
+# 
+# 
+# playEpisonde = function(DT, state_to_play) {
+#   DTin = copy(DT)
+#   if (anyDuplicated(DTin)) {
+#     browser()
+#   }
+#   DTout = playOneIteration(
+#     DTin
+#     , state_to_play = state_to_play
+#     # , state_to_play = c(DT$state_dealer, DT$state_player)
+#   )
+#   
+#   while (!any(DTout[, terminal])) {
+#     DTout = rbind(
+#       DTout[-nrow(DTout), ]
+#       , playOneIteration(
+#         DTout
+#         , DTout[nrow(DTout), c(state_dealer, state_player)]
+#       )
+#     )
+#   }
+#   
+#   DTout = DTout[terminal == FALSE, ]
+#   DTout
+#   
+#   DTout = DTout[
+#     , value := mcUpdate(
+#       value
+#       , reward
+#       , Ns
+#       , alpha(Na)
+#     )
+#     , by = 1:nrow(DTout)
+#   ]
+#   
+#   n = nrow(DTout)
+#   values = DTout[, value]
+#   
+#   for (i in seq_len(n)) {
+#     j = i - 1
+#     if (i == 1) {
+#       DTout[i, value := mean(tail(values, n))]
+#     } else {
+#       DTout[i, value := mean(tail(values, -j))]
+#     }
+#   }
+#   
+#   return(DTout)
+# }
+# 
+# 
+# 
+# players_cards = drawCard("black")
+# dealers_card = drawCard("black")
+# 
+# df = initiateTable(c(dealers_card, players_cards))
+# df
+# 
+# epi = playEpisonde(df, c(df$state_dealer, df$state_player))
+# epi
+# 
+# for (i in 1:100) {
+#   print(i)
+#   new_state = c(drawCard("black"), drawCard("black"))
+#   new_epi = playEpisonde(epi, new_state)
+#   
+#   epi = merge(
+#     epi
+#     , new_epi
+#     , by = c("state_dealer", "state_player", "action")
+#     , all = TRUE
+#   )
+#   
+#   cols = grep(".x$|.y$", names(epi), value = TRUE)
+#   
+#   epi[
+#     , c("Na", "Ns", "reward", "value", "terminal") := list(
+#       sum(c(Na.x, Na.y), na.rm = TRUE)
+#       , sum(c(Ns.x, Ns.y), na.rm = TRUE)
+#       , sum(c(reward.x, reward.y), na.rm = TRUE)
+#       , value = mean(c(value.x, value.y), na.rm = TRUE)
+#       , FALSE
+#     )
+#     , by = 1:nrow(epi)
+#   ][
+#     , (cols) := NULL
+#   ]
+#   setorder(epi, state_dealer, state_player, action)
+# }
+# epi
+# 
+# 
+# jnk = lapply(
+#   1:10
+#   , \(i) {
+#     epi = rbind(
+#       epi
+#       , playEpisonde(epi, c(drawCard("black"), drawCard("black")))
+#     )
+#   }
+# )
+# 
+# jnk = playEpisonde(df, c(df$state_dealer, df$state_player))
+# print(jnk)
+# 
+# jnk2 = rbind(
+#   jnk
+#   , playEpisonde(jnk, c(drawCard("black"), drawCard("black")))
+# )
+# print(jnk2)
+# 
+# tst = merge(
+#   jnk
+#   , jnk2
+#   , by = c("state_dealer", "state_player", "action")
+#   , all = TRUE
+# )
+# 
+# cols = grep(".x$|.y$", names(tst), value = TRUE)
+# 
+# tst[
+#   , c("Na", "Ns", "reward", "value", "terminal") := list(
+#     sum(c(Na.x, Na.y), na.rm = TRUE)
+#     , sum(c(Ns.x, Ns.y), na.rm = TRUE)
+#     , sum(c(reward.x, reward.y), na.rm = TRUE)
+#     , value = mean(c(value.x, value.y), na.rm = TRUE)
+#     , FALSE
+#   )
+#   , by = 1:nrow(tst)
+# ][
+#   , (cols) := NULL
+# ]
+# 
+# print(tst)
 ```
 
 :::
