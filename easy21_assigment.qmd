@@ -308,13 +308,18 @@ chooseAction = function(epsilon, greedy_action = NULL) {
   return(action)
 }
 
-mcUpdate = function(value, reward, Ns, alpha) {
-  value + alpha * (reward - value) # / Ns
+chooseAction2 = function(epsilon, greedy_action = NULL) {
+  rnd = runif(1, 0, 1)
+  ifelse(rnd < epsilon, sample(c("hit", "stick"), 1), greedy_action)
 }
 
-# isPlayable = function(s) {
-#   s[1] <= 10 & !(any(s < 1) || any(s > 21))
-# }
+mcUpdate = function(value, reward, alpha) {
+  value + alpha * (reward - value)
+}
+
+isPlayable = function(s) {
+  !(any(s < 1) || any(s > 21))
+}
 ```
 
 #### Python
@@ -337,6 +342,8 @@ initiateTable = function(
     , Na = 0
     , Ns = 0
     , value = 0
+    , epsilon = 1
+    , reward = 0
     , terminal = FALSE
 ) {
   data.table(
@@ -346,6 +353,8 @@ initiateTable = function(
     , Na = Na
     , Ns = Ns
     , value = value
+    , epsilon = epsilon
+    , reward = reward
     , terminal = terminal
   )
 }
@@ -357,14 +366,16 @@ initiateTable = function(
 # FIXME: there's some problem with counting Ns & Na somewhere...
 
 # initial card draw
-for (i in 1:1e7) {
+for (i in 1:10000) {
 # while (min(dat$Na) <= 50) {
   print(i)
   # print(min(dat$Na))
   dealers_card = drawCard("black")
   players_sum = drawCard("black")
-  # dealers_card = 2
-  # players_sum = 11
+  # dealers_card = 10
+  # players_sum = 10
+  
+  totalreward = 0
   
   # choose (random) action
   if (exists("dat")) {
@@ -374,6 +385,8 @@ for (i in 1:1e7) {
         state_player == players_sum
       , sum(Ns)
     ]
+    
+    eps = epsilon(Ns)
     
     greedy_act = greedyAction(
       actions = dat[
@@ -388,7 +401,7 @@ for (i in 1:1e7) {
       ]
     )
     
-    act = chooseAction(epsilon(Ns), greedy_act)
+    act = chooseAction(eps, greedy_act)
     
     df_episode = initiateTable(
       state = c(dealers_card, players_sum)
@@ -396,6 +409,8 @@ for (i in 1:1e7) {
       , Na = 0
       , Ns = 0
       , value = 0
+      , epsilon = eps
+      , reward = totalreward
     )
 
   } else {
@@ -406,6 +421,8 @@ for (i in 1:1e7) {
       , Na = 0
       , Ns = 0
       , value = 0
+      , epsilon = 1
+      , reward = totalreward
     )
     dat = copy(df_episode)
   }
@@ -413,6 +430,8 @@ for (i in 1:1e7) {
   # play state-action
   s1 = step(c(dealers_card, players_sum), act)
   s1
+  
+  totalreward = totalreward + s1$r
   
   # if episode not terminated, update (dealers and) players card sum
   while (!s1$terminated) {
@@ -425,6 +444,8 @@ for (i in 1:1e7) {
       , sum(Ns)
     ]
     
+    eps = epsilon(Ns)
+    
     greedy_act = greedyAction(
       actions = dat[
         state_dealer == dealers_card &
@@ -438,7 +459,7 @@ for (i in 1:1e7) {
       ]
     )
     
-    act = chooseAction(epsilon(Ns), greedy_act)
+    act = chooseAction(eps, greedy_act)
     
     df_episode = rbind(
       df_episode
@@ -448,14 +469,17 @@ for (i in 1:1e7) {
         , Na = 0
         , Ns = 0
         , value = 0
+        , epsilon = eps
+        , reward = totalreward
       )
     )
     
     s1 = step(c(dealers_card, players_sum), act)
+    totalreward = totalreward + s1$r
     
   }
   
-  for (i in nrow(df_episode)) {
+  for (i in seq_len(nrow(df_episode))) {
     
     crd_dlr = df_episode[i, state_dealer]
     sum_plr = df_episode[i, state_player]
@@ -465,9 +489,10 @@ for (i in 1:1e7) {
       state_dealer == crd_dlr & 
         state_player == sum_plr & 
         action == act
-      , c("Ns", "Na") := list(
+      , c("Ns", "Na", "reward") := list(
         Ns + 1
         , Na + 1
+        , totalreward
       )
     ]
     
@@ -477,11 +502,19 @@ for (i in 1:1e7) {
       , sum(Ns)
     ]
     
+    eps = epsilon(Nsi)
+    
+    df_episode[
+      state_dealer == crd_dlr &
+        state_player == sum_plr
+      , epsilon := eps
+    ]
+    
     df_episode[
       state_dealer == crd_dlr &
         state_player == sum_plr &
         action == act
-      , value := mcUpdate(value, s1$r, Nsi, alpha(Na))
+      , value := mcUpdate(value, totalreward, alpha(Na))
     ]
   
     dat_part = dat[
@@ -500,9 +533,10 @@ for (i in 1:1e7) {
         state_dealer == crd_dlr & 
           state_player == sum_plr & 
           action == act
-        , c("Ns", "Na") := list(
+        , c("Ns", "Na", "reward") := list(
           Ns + 1
           , Na + 1
+          , totalreward
         )
       ]
       
@@ -512,12 +546,19 @@ for (i in 1:1e7) {
         , sum(Ns)
       ]
       
+      eps = epsilon(Nsi)
+      
+      dat[
+        state_dealer == crd_dlr &
+          state_player == sum_plr
+        , epsilon := eps
+      ]
       
       dat[
         state_dealer == crd_dlr &
           state_player == sum_plr &
           action == act
-        , value := mcUpdate(value, s1$r, Nsi, alpha(Na))
+        , value := mcUpdate(value, totalreward, alpha(Na))
       ]
       
     } else {
@@ -529,10 +570,12 @@ for (i in 1:1e7) {
   }  
 }
 
+setorder(dat, state_dealer, state_player, action)
 dat
+
 summary(dat)
 
-saveRDS(dat, "data/20231218_dat.rds")
+# saveRDS(dat, "data/20231219_dat.rds")
 
 DTfinal = dat[
   , .(
@@ -543,6 +586,10 @@ DTfinal = dat[
   )
   , by = c("state_dealer", "state_player")
 ]
+
+DTfinal[, .N, by = "action"]
+
+summary(DTfinal)
 
 library(lattice)
 
@@ -564,7 +611,7 @@ Q = lattice::wireframe(
 
 Q
 
-png("imgs/MCcontrol.png", width = 800, height = 800, units = "px")
+png("imgs/20231219_MCcontrol.png", width = 800, height = 800, units = "px")
 print(Q)
 dev.off()
 
@@ -577,6 +624,6 @@ dev.off()
 # )
 ```
 
-![](imgs/MCcontrol.png)
+![](imgs/20231218_MCcontrol.png)
 
 :::
